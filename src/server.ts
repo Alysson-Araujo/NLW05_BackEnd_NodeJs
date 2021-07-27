@@ -1,4 +1,10 @@
-import express, { response } from "express";
+import express from "express";
+import {createServer} from "http";
+import {Server, Socket} from "socket.io";
+import path from "path";
+
+import "./database";
+import {routes} from "./routes";
 /* 
    *** em relação ao import express from "express";
    quando estiver ... no nome da dependência, significa que as tipagens dessa biblioteca 
@@ -27,13 +33,11 @@ import express, { response } from "express";
 
    comandos extras passadas do discord {
       npm run tsc --init
-      $sudo apt install node-typescript and  $tsc init
+      $ sudo apt install node-typescript and  $tsc init
 
    }
    
 */ 
-const app = express();
-
 /**
  * GET = BUSCA
  * POST = CRIAÇÃO
@@ -54,17 +58,44 @@ const app = express();
   });
 }
  */
+/*
+
 app.get("/", (request, response) =>{
    return response.json({
       menssage: "Olá NLW 05"
   });
 });
+*/
 
-
-
-app.post("/users", (request, response) =>{
+/* app.post("/users", (request, response) =>{
    return response.json({
       menssage: "Usuário salvo com sucesso!"});
 });
+ */
 
-app.listen(3333, () => console.log("Server is running on port 3333"));
+
+const app = express();
+
+app.use(express.static(path.join(__dirname, "..", "public")));
+app.set("views",path.join(__dirname, "..", "public"));
+app.engine("html", require("ejs").renderFile);
+app.set("view engine", "html");
+
+// rota de teste
+app.get("/pages/client",(request, response) =>{
+   return response.render("html/client.html");
+});
+
+const http = createServer(app); // criando um protocolo http
+const io = new Server(); // criando um protocolo ws
+
+io.on("connection",(socket: Socket) =>{
+   console.log("Se conectou", socket.id);
+});
+
+
+
+app.use(express.json()); 
+app.use(routes);
+
+http.listen(3333, () => console.log("Server is running on port 3333"));
